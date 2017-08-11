@@ -189,7 +189,9 @@ module.exports = {
    */
   syncToPhysics: (function () {
     var q =  new THREE.Quaternion(),
-        v = new THREE.Vector3();
+        v = new THREE.Vector3(),
+        oldQ = new CANNON.Quaternion(),
+        oldP = new CANNON.Vec3();
     return function () {
       var el = this.el,
           parentEl = el.parentEl,
@@ -207,6 +209,14 @@ module.exports = {
         body.quaternion.copy(q);
         el.object3D.getWorldPosition(v);
         body.position.copy(v);
+      }
+
+      const bodyQ = body.quaternion;
+      if (!body.position.almostEquals(oldP, 0.00001) || 
+        (bodyQ.x != oldQ.x || bodyQ.y != oldQ.y || bodyQ.z != oldQ.z || bodyQ.w != oldQ.w)) {
+        body.aabbNeedsUpdate = true;
+        oldQ.copy(bodyQ);
+        oldP.copy(body.position);
       }
 
       if (this.body.updateProperties) this.body.updateProperties();
